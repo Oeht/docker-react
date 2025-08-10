@@ -1,0 +1,26 @@
+# Ignore dependencies and build outputs
+node_modules
+build
+dist
+
+# VCS and editor junk
+.git
+.github
+.vscode
+.DS_Store
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS/IDE
+*.swp
+*.swo
+
+# Compose files don't need to be in build context
+docker-compose.yml
+
+# Keep entrypoint and Dockerfile in context!
+# (Do NOT ignore: entrypoint.sh, Dockerfile)
