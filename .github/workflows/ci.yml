@@ -1,4 +1,4 @@
-name: CI
+name: Docker Run
 
 on:
   push:
@@ -8,56 +8,34 @@ on:
   workflow_dispatch:
 
 jobs:
-  node:
-    # Skip if no package.json in repo (e.g., fresh template before first run)
-    if: ${{ hashFiles('package.json') != '' }}
+  run:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+      - name: Build & start with Docker Compose
+        run: docker compose up -d --build
 
-      - name: Install dependencies
+      - name: Wait for app (http://localhost:3000)
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
+          echo "Waiting for dev server to become available..."
+          for i in {1..150}; do  # ~5 minutes
+            if curl -fsS http://localhost:3000 >/dev/null; then
+              echo "App is up ✅"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "App did not respond in time ❌" >&2
+          docker compose logs --no-color || true
+          exit 1
 
-      - name: Lint (if script exists)
-        run: |
-          if npm run | grep -qE '^\s{2}lint'; then
-            npm run lint
-          else
-            echo 'No "lint" script found, skipping.'
-          fi
+      - name: Show logs (always)
+        if: always()
+        run: docker compose logs --no-color | tail -n 400 || true
 
-      - name: Test
-        run: CI=true npm test -- --watch=false
-
-      - name: Build
-        run: npm run build
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: build
-          path: build
-
-  docker:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Validate docker-compose
-        run: docker compose config -q
-
-      - name: Build Docker image
-        run: docker build -t react-dev-template:ci .
+      - name: Shutdown
+        if: always()
+        run: docker compose down
