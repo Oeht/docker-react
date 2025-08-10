@@ -1,3 +1,5 @@
+[![Docker Run](https://github.com/Oeht/docker-react/actions/workflows/ci.yml/badge.svg)](https://github.com/Oeht/docker-react/actions/workflows/ci.yml)
+
 # React Dev Container Template (Docker + CRA, Hot Reload, zero Node on Host)
 
 This template runs a React app **entirely in Docker**.  
